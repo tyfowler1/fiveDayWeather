@@ -1,95 +1,89 @@
-const apiKey = '4b9003adf8523264e0d88c73fd217e82';
-const form = document.querySelector('form');
-const cityInput = document.querySelector('#city');
-const currentWeatherSection = document.querySelector('#current-weather');
-const forecastSection = document.querySelector('#forecast');
-const searchHistorySection = document.querySelector('#search-history');
-let searchHistory = [];
+// Holds Api Key
+const apiKey = '3252b9f33af38ef675dd5ad36e6f7d26'; // API Key
 
-// Function to get weather data for a city and display it to the user
-function getWeatherData(city) {
-  const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
 
-  fetch(apiUrl)
-    .then(response => response.json())
-    .then(data => {
-      // Parse the JSON response and display the weather data to the user
-      const cityName = data.name;
-      const date = new Date(data.dt * 1000).toLocaleDateString();
-      const iconUrl = `https://openweathermap.org/img/w/${data.weather[0].icon}.png`;
-      const temperature = data.main.temp;
-      const humidity = data.main.humidity;
-      const windSpeed = data.wind.speed;
+// Function to fetch weather data from OpenWeatherMap API
+async function getWeatherData(city) {
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
 
-      currentWeatherSection.innerHTML = `
-        <h2>${cityName} (${date}) <img src="${iconUrl}" alt="${data.weather[0].description}"></h2>
-        <p>Temperature: ${temperature} °C</p>
-        <p>Humidity: ${humidity}%</p>
-        <p>Wind Speed: ${windSpeed} m/s</p>
-      `;
-    })
-    .catch(error => {
-      console.error(error);
-    });
-
-    const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
-
-    fetch(forecastApiUrl)
-      .then(response => response.json())
-      .then(data => {
-        // Parse the JSON response and display the forecast data to the user
-        const forecastData = data.list.filter(item => item.dt_txt.includes('12:00:00'));
-        let forecastHtml = '<h2>5-Day Forecast:</h2><div class="forecast-container">';
-  
-        forecastData.forEach(item => {
-          const date = new Date(item.dt * 1000).toLocaleDateString();
-          const iconUrl = `https://openweathermap.org/img/w/${item.weather[0].icon}.png`;
-          const temperature = item.main.temp;
-          const humidity = item.main.humidity;
-          const windSpeed = item.wind.speed;
-  
-          forecastHtml += `
-            <div class="forecast-item">
-              <h3>${date}</h3>
-              <img src="${iconUrl}" alt="${item.weather[0].description}">
-              <p>Temperature: ${temperature} °C</p>
-              <p>Humidity: ${humidity}%</p>
-              <p>Wind Speed: ${windSpeed} m/s</p>
-            </div>
-          `;
-        });
-  
-        forecastHtml += '</div>';
-        forecastSection.innerHTML = forecastHtml;
-      })
-      .catch(error => {
-        console.error(error);
-      });
-
-        // Add the city to the search history
-  searchHistory.push(city);
-  const searchHistoryHtml = searchHistory.map(item => `<button>${item}</button>`).join('');
-  searchHistorySection.innerHTML = `<h2>Search History:</h2>${searchHistoryHtml}`;
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching weather data:', error);
+        return null;
+    }
 }
 
-// Handle form submission
-form.addEventListener('submit', event => {
-  event.preventDefault();
-  const city = cityInput.value.trim();
-  if (city) {
-    getWeatherData(city);
-    cityInput.value = '';
-  }
-});
+// Function to handle the search button click event
+async function searchWeather() {
+    const cityInput = document.getElementById('city-input');
+    const city = cityInput.value.trim();
 
-// Handle search history button click
-searchHistorySection.addEventListener('click', event => {
-  if (event.target.tagName === 'BUTTON') {
-    const city = event.target.textContent;
-    getWeatherData(city);
-  }
-});
+    if (city) {
+        // Fetch current weather data
+        const currentWeather = await getWeatherData(city);
+        updateCurrentWeather(currentWeather);
 
+        // Fetch 5-day forecast data
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=imperial`;
+        const forecastResponse = await fetch(forecastUrl);
+        const forecastData = await forecastResponse.json();
+        updateForecast(forecastData);
+    } else {
+        alert('Please enter a city name.');
+    }
+}
+
+// Function to update the current weather section in the UI
+function updateCurrentWeather(weatherData) {
+    const currentWeatherElement = document.getElementById('current-weather');
+    
+    // Check if data is available
+    if (weatherData) {
+        const { name, main, weather, wind } = weatherData;
+        const html = `
+            <h2>${name} - ${weather[0].description}</h2>
+            <p>Temperature: ${main.temp}°F</p>
+            <p>Humidity: ${main.humidity}%</p>
+            <p>Wind Speed: ${wind.speed} mph</p>
+        `;
+        currentWeatherElement.innerHTML = html;
+    } else {
+        currentWeatherElement.innerHTML = '<p>Unable to fetch weather data.</p>';
+    }
+}
+
+function updateForecast(forecastData) {
+    const futureWeatherElement = document.getElementById('future-weather');
+
+    // Check if data is available
+    if (forecastData && forecastData.list) {
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);  // Set hours, minutes, seconds, and milliseconds to 0
+
+        const html = forecastData.list.filter(day => {
+            // Filter out items for the current day and any past days
+            const date = new Date(day.dt_txt);
+            date.setHours(0, 0, 0, 0);  // Set hours, minutes, seconds, and milliseconds to 0
+            return date > currentDate;
+        }).slice(0, 5).map(day => {
+            const date = new Date(day.dt_txt);
+            return `
+                <div class="forecast-item">
+                    <p>Date: ${date.toLocaleDateString()}</p>
+                    <p>Temperature: ${day.main.temp}°F</p>
+                    <p>Humidity: ${day.main.humidity}%</p>
+                    <p>Wind Speed: ${day.wind.speed} mph</p>
+                </div>
+            `;
+        }).join('');
+        futureWeatherElement.innerHTML = html;
+    } else {
+        futureWeatherElement.innerHTML = '<p>Unable to fetch forecast data.</p>';
+    }
+}
 
 
 

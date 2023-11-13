@@ -1,19 +1,27 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./assets/style.css">
     <title>Weather Dashboard</title>
-    <style src="./assets/style.css"></style>
-  </head>
-  <body>
-    <h1>Weather Dashboard</h1>
-    <form>
-      <label for="city">Enter the name of the city:</label>
-      <input type="text" id="city" name="city">
-      <button type="submit">Get Weather</button>
-    </form>
-    <section id="current-weather"></section>
-    <section id="forecast"></section>
-    <section id="search-history"></section>
+</head>
+<body>
+    <div id="weather-dashboard">
+        <form id="search-form">
+            <input type="text" id="city-input" placeholder="Enter city">
+            <button type="button" onclick="searchWeather()">Search</button>
+        </form>
+        <div id="current-weather">
+            <!-- Display current weather information here -->
+        </div>
+        <div id="future-weather">
+            <!-- Display 5-day forecast here -->
+        </div>
+        <div id="search-history">
+            <!-- Display search history here -->
+        </div>
+    </div>
     <script src="./assets/script.js"></script>
-  </body>
+</body>
 </html>

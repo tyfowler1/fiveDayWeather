@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+#weather-dashboard {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#search-form {
+    display: flex;
+}
+
+#city-input {
+    flex: 1;
+    padding: 5px;
+}
+
+button {
+    padding: 5px;
+    cursor: pointer;
+}
+
+#current-weather, #future-weather, #search-history {
+    margin-top: 20px;
+}
